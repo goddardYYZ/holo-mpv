@@ -15,7 +15,7 @@ HEADERS = {
 
 def get_live_hololive_streams():
     """Fetch live Hololive VTuber streams."""
-    params = {"org": "Hololive", "limit": 20, "status": "live"}
+    params = {"org": "Hololive", "limit": 20, "status": "live", "lang": "en"}
     response = requests.get(HOLODEX_API_URL, params=params, headers=HEADERS)
 
     if response.status_code != 200:
