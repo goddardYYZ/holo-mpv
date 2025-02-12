@@ -9,7 +9,7 @@ HOLODEX_API_URL = "https://holodex.net/api/v2/live"
 
 # Headers including API key for authentication
 HEADERS = {
-    "Authorization": HOLODEX_API_KEY,
+    "X-APIKEY": HOLODEX_API_KEY,  # ✅ Correct header name
     "User-Agent": "Mozilla/5.0"
 }
 
@@ -18,9 +18,15 @@ def get_live_hololive_streams():
     params = {"org": "Hololive", "limit": 20, "status": "live"}
     response = requests.get(HOLODEX_API_URL, params=params, headers=HEADERS)
 
-    if response.status_code != 200:
-        print(f"❌ Error fetching live streams! Status Code: {response.status_code}")
-        print(response.text)  # Print API response for debugging
+    if response.status_code == 403:
+        print("❌ ERROR: Forbidden (403). Your API key may lack permissions.")
+        return []
+    elif response.status_code == 401:
+        print("❌ ERROR: Unauthorized (401). Check your API key.")
+        return []
+    elif response.status_code != 200:
+        print(f"❌ ERROR: API request failed! Status Code: {response.status_code}")
+        print(response.text)  # Print response for debugging
         return []
 
     streams = response.json()
