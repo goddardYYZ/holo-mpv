@@ -4,36 +4,29 @@ import subprocess
 # Your Holodex API key
 HOLODEX_API_KEY = "64eac75c-d7dd-44fc-b6b1-addbe3961b10"
 
-# Holodex API endpoint for live Hololive streams
+# Holodex API endpoint for live streams
 HOLODEX_API_URL = "https://holodex.net/api/v2/live"
 
 # Headers including API key for authentication
 HEADERS = {
-    "X-APIKEY": HOLODEX_API_KEY,  # ✅ Correct header name
+    "X-APIKEY": HOLODEX_API_KEY,
     "User-Agent": "Mozilla/5.0"
 }
 
 def get_live_hololive_streams():
-    """Fetch live Hololive VTuber streams from Holodex API."""
+    """Fetch live Hololive VTuber streams."""
     params = {"org": "Hololive", "limit": 20, "status": "live"}
     response = requests.get(HOLODEX_API_URL, params=params, headers=HEADERS)
 
-    if response.status_code == 403:
-        print("❌ ERROR: Forbidden (403). Your API key may lack permissions.")
-        return []
-    elif response.status_code == 401:
-        print("❌ ERROR: Unauthorized (401). Check your API key.")
-        return []
-    elif response.status_code != 200:
-        print(f"❌ ERROR: API request failed! Status Code: {response.status_code}")
-        print(response.text)  # Print response for debugging
+    if response.status_code != 200:
+        print(f"❌ ERROR: {response.status_code} - {response.text}")
         return []
 
     streams = response.json()
-    return [(stream["channel"]["name"], stream["id"]) for stream in streams]
+    return [(stream["channel"]["name"], stream["id"], stream["title"]) for stream in streams if stream["status"] == "live"]
 
 def open_in_mpv(video_id):
-    """Open a YouTube live stream in MPV."""
+    """Open live stream in MPV."""
     url = f"https://www.youtube.com/watch?v={video_id}"
     subprocess.run(["mpv", url])
 
@@ -41,12 +34,12 @@ def main():
     live_streams = get_live_hololive_streams()
 
     if not live_streams:
-        print("⚠️ No Hololive VTubers are live right now.")
+        print("⚠️ No live Hololive VTubers at the moment.")
         return
 
     print("\n🎥 Live Hololive VTubers:\n")
-    for idx, (name, _) in enumerate(live_streams, start=1):
-        print(f"{idx}. {name}")
+    for idx, (name, _, title) in enumerate(live_streams, start=1):
+        print(f"{idx}. {name} - {title}")
 
     choice = input("\nEnter the number of the stream to open (or press Enter to exit): ")
     
@@ -56,7 +49,7 @@ def main():
     
     choice = int(choice)
     if 1 <= choice <= len(live_streams):
-        _, video_id = live_streams[choice - 1]
+        _, video_id, _ = live_streams[choice - 1]
         print(f"🎬 Opening {live_streams[choice - 1][0]}'s stream...")
         open_in_mpv(video_id)
     else:
